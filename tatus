@@ -1,0 +1,9 @@
+[33mcommit 7a95f41997f0a62c910ead4d10276efd0a20efb1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: YannVladimir <bavlaya549@gmail.com>
+Date:   Tue Apr 22 17:24:38 2025 +0200
+
+    Initial commit: Add project files and configuration
+
+M	.env
+A	"s -Name java \357\201\274 Stop-Process -Force"
+M	src/main/resources/application.properties.example
