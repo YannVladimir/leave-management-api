@@ -1,0 +1,16 @@
+New Leave Request
+
+Hello [[${managerName}]],
+[[${requesterName}]] has submitted a new leave request with the following details:
+
+- Leave Type: [[${leaveType}]]
+- Start Date: [[${startDate}]]
+- End Date: [[${endDate}]]
+
+Please review this request in the Leave Management System.
+
+Best regards,
+Leave Management System
+
+---
+This is an automated message. Please do not reply directly to this email. 

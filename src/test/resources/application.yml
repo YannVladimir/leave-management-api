@@ -1,0 +1,8 @@
+spring:
+  security:
+    user:
+      name: test
+      password: test
+      roles: USER
+  main:
+    allow-bean-definition-overriding: true

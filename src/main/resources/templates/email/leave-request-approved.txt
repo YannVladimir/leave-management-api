@@ -1,0 +1,16 @@
+Leave Request Approved
+
+Hello [[${requesterName}]],
+Your leave request has been approved with the following details:
+
+- Leave Type: [[${leaveType}]]
+- Start Date: [[${startDate}]]
+- End Date: [[${endDate}]]
+
+You can view the details of your approved leave request in the Leave Management System.
+
+Best regards,
+Leave Management System
+
+---
+This is an automated message. Please do not reply directly to this email. 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Leave Request Approved</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #d4edda;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            color: #155724;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Leave Request Approved</h2>
+    </div>
+    <div class="content">
+        <p>Hello <span th:text="${requesterName}">Requester Name</span>,</p>
+        <p>Your leave request has been approved with the following details:</p>
+        <ul>
+            <li><strong>Leave Type:</strong> <span th:text="${leaveType}">Leave Type</span></li>
+            <li><strong>Start Date:</strong> <span th:text="${startDate}">Start Date</span></li>
+            <li><strong>End Date:</strong> <span th:text="${endDate}">End Date</span></li>
+        </ul>
+        <p>You can view the details of your approved leave request in the Leave Management System.</p>
+        <p>Best regards,<br>Leave Management System</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message. Please do not reply directly to this email.</p>
+    </div>
+</body>
+</html> 
