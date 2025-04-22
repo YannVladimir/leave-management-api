@@ -1,0 +1,47 @@
+# Server Configuration
+server.port=8083
+
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:leave}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:your_password_here}
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Microsoft OAuth2 Configuration
+spring.security.oauth2.client.registration.microsoft.client-id=your_client_id_here
+spring.security.oauth2.client.registration.microsoft.client-secret=your_client_secret_here
+spring.security.oauth2.client.registration.microsoft.scope=openid,profile,email
+spring.security.oauth2.client.registration.microsoft.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.microsoft.redirect-uri=http://localhost:8083/login/oauth2/code/microsoft
+spring.security.oauth2.client.provider.microsoft.authorization-uri=https://login.microsoftonline.com/your_tenant_id_here/oauth2/v2.0/authorize
+spring.security.oauth2.client.provider.microsoft.token-uri=https://login.microsoftonline.com/your_tenant_id_here/oauth2/v2.0/token
+spring.security.oauth2.client.provider.microsoft.jwk-set-uri=https://login.microsoftonline.com/your_tenant_id_here/discovery/v2.0/keys
+spring.security.oauth2.client.provider.microsoft.issuer-uri=https://login.microsoftonline.com/your_tenant_id_here/v2.0
+
+# SpringDoc OpenAPI Configuration
+springdoc.api-docs.path=/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.oauth.client-id=${spring.security.oauth2.client.registration.microsoft.client-id}
+springdoc.swagger-ui.oauth.use-pkce-with-authorization-code-grant=true
+springdoc.packages-to-scan=com.africahr.leave
+springdoc.swagger-ui.operationsSorter=method
+springdoc.swagger-ui.tagsSorter=alpha
+
+# Email Configuration
+spring.mail.host=${SMTP_HOST:smtp.gmail.com}
+spring.mail.port=${SMTP_PORT:587}
+spring.mail.username=${SMTP_USERNAME:your_email_here}
+spring.mail.password=${SMTP_PASSWORD:your_app_password_here}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.connectiontimeout=5000
+spring.mail.properties.mail.smtp.timeout=5000
+spring.mail.properties.mail.smtp.writetimeout=5000
+
+# Email Templates
+email.templates.path=classpath:/templates/email/
+email.from=${SMTP_FROM:no-reply@africahr.com}
+email.reply-to=${SMTP_REPLY_TO:support@africahr.com} 
