@@ -1,6 +1,6 @@
 package com.africahr.leave.service.impl;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

@@ -1,7 +1,6 @@
 package com.africahr.leave.security;
 
-import com.africahr.leave.model.entity.User;
-import com.africahr.leave.model.enums.UserRole;
+import com.africahr.leave.model.User;
 import com.africahr.leave.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,65 +8,51 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-    private static final Logger log = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
     private final UserService userService;
 
     public OAuth2AuthenticationSuccessHandler(UserService userService) {
         this.userService = userService;
-        setDefaultTargetUrl("http://localhost:3000/dashboard");
+        setDefaultTargetUrl("http://localhost:3001/dashboard");
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                      Authentication authentication) throws IOException, ServletException {
-        log.info("OAuth2/OIDC authentication success. Processing user details...");
-        
-        if (authentication.getPrincipal() instanceof OidcUser oidcUser) {
-            try {
-                Map<String, Object> attributes = oidcUser.getAttributes();
-                String microsoftId = attributes.get("sub").toString();
-                String email = attributes.get("email").toString();
-                String firstName = attributes.get("given_name").toString();
-                String lastName = attributes.get("family_name").toString();
-
-                log.info("Processing user - Email: {}, MicrosoftId: {}", email, microsoftId);
-
-                User user = userService.findByMicrosoftId(microsoftId)
-                        .orElseGet(() -> userService.findByEmail(email)
-                                .orElseGet(() -> {
-                                    log.info("Creating new user with email: {}", email);
-                                    User newUser = new User();
-                                    newUser.setEmail(email);
-                                    newUser.setFirstName(firstName);
-                                    newUser.setLastName(lastName);
-                                    newUser.setMicrosoftId(microsoftId);
-                                    newUser.setActive(true);
-
-                                    Set<UserRole> roles = new HashSet<>();
-                                    roles.add(UserRole.USER);
-                                    newUser.setRoles(roles);
-
-                                    log.info("Saving new user to database");
-                                    return userService.save(newUser);
-                                }));
-
-                log.info("User processed successfully. ID: {}", user.getId());
-            } catch (Exception e) {
-                log.error("Error processing user after authentication: {}", e.getMessage(), e);
+            Authentication authentication) throws IOException, ServletException {
+        try {
+            logger.info("OAuth2 authentication successful");
+            
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            Map<String, Object> attributes = oauth2User.getAttributes();
+            
+            logger.debug("OAuth2 user attributes: {}", attributes);
+            
+            String email = (String) attributes.get("email");
+            String name = (String) attributes.get("name");
+            String providerId = (String) attributes.get("sub");
+            
+            if (email == null || name == null || providerId == null) {
+                logger.error("Missing required user attributes: email={}, name={}, providerId={}", 
+                    email, name, providerId);
+                throw new ServletException("Missing required user attributes");
             }
+            
+            User user = userService.getOrCreateUserFromOAuth2User(oauth2User);
+            logger.info("User processed successfully: {}", user.getEmail());
+            
+            super.onAuthenticationSuccess(request, response, authentication);
+        } catch (Exception e) {
+            logger.error("Error during OAuth2 authentication success handling", e);
+            response.sendRedirect("/error-500?error=" + e.getMessage());
         }
-
-        super.onAuthenticationSuccess(request, response, authentication);
     }
 } 

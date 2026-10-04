@@ -1,23 +1,27 @@
 package com.africahr.leave.security;
 
-import com.africahr.leave.model.entity.User;
-import lombok.Getter;
+import com.africahr.leave.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-@Getter
-public class CustomOAuth2User implements OAuth2User {
+public class CustomOAuth2User implements OidcUser {
     private final User user;
     private final Map<String, Object> attributes;
+    private final Collection<GrantedAuthority> authorities;
 
     public CustomOAuth2User(User user, Map<String, Object> attributes) {
         this.user = user;
         this.attributes = attributes;
+        this.authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -27,11 +31,36 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRoles().iterator().next().name()));
+        return authorities;
     }
 
     @Override
     public String getName() {
         return user.getEmail();
+    }
+
+    @Override
+    public Map<String, Object> getClaims() {
+        return attributes;
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return OidcUserInfo.builder()
+                .subject(user.getMicrosoftId())
+                .email(user.getEmail())
+                .givenName(user.getFirstName())
+                .familyName(user.getLastName())
+                .name(user.getFullName())
+                .build();
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return null; // We don't need to implement this for our use case
+    }
+
+    public User getUser() {
+        return user;
     }
 } 

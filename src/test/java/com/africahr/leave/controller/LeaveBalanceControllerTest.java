@@ -1,8 +1,8 @@
 package com.africahr.leave.controller;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.dto.LeaveBalanceDTO;
 import com.africahr.leave.model.entity.LeaveBalance;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.model.enums.LeaveType;
 import com.africahr.leave.service.LeaveBalanceService;
 import com.africahr.leave.service.UserService;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,35 +48,36 @@ public class LeaveBalanceControllerTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime now = LocalDateTime.now();
+        
         user = User.builder()
-                .id(1L)
-                .firstName("John")
-                .lastName("Doe")
-                .email("john.doe@example.com")
-                .build();
+            .id(1L)
+            .name("John Doe")
+            .email("john.doe@example.com")
+            .providerId("microsoft123")
+            .provider("microsoft")
+            .active(true)
+            .createdAt(now)
+            .lastUpdated(now)
+            .fullName("John Doe")
+            .firstName("John")
+            .lastName("Doe")
+            .build();
 
         leaveBalance = LeaveBalance.builder()
-                .id(1L)
-                .user(user)
-                .leaveType(LeaveType.ANNUAL)
-                .balance(20.0)
-                .totalAccrued(20.0)
-                .usedDays(0.0)
-                .carriedForward(0.0)
-                .year(2024)
-                .build();
+            .id(1L)
+            .user(user)
+            .leaveType(LeaveType.ANNUAL)
+            .balance(20.0)
+            .totalAccrued(20.0)
+            .usedDays(0.0)
+            .carriedForward(0.0)
+            .year(2024)
+            .createdAt(now)
+            .lastUpdated(now)
+            .build();
 
-        leaveBalanceDTO = LeaveBalanceDTO.builder()
-                .id(1L)
-                .userId(1L)
-                .userFullName("John Doe")
-                .leaveType(LeaveType.ANNUAL)
-                .balance(20.0)
-                .totalAccrued(20.0)
-                .usedDays(0.0)
-                .carriedForward(0.0)
-                .year(2024)
-                .build();
+        leaveBalanceDTO = LeaveBalanceDTO.fromEntity(leaveBalance);
     }
 
     @Test

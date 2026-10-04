@@ -1,6 +1,6 @@
 package com.africahr.leave.controller;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.enums.UserRole;
 import com.africahr.leave.service.UserService;
 import org.springframework.http.ResponseEntity;

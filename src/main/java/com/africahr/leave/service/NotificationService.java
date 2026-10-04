@@ -1,7 +1,7 @@
 package com.africahr.leave.service;
 
 import com.africahr.leave.model.entity.Notification;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.africahr.leave.controller;
 
 import com.africahr.leave.model.entity.Department;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.enums.LeaveType;
 import com.africahr.leave.service.DepartmentService;
 import com.africahr.leave.service.LeaveReportService;

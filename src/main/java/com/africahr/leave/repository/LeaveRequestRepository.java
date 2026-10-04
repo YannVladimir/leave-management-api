@@ -1,8 +1,8 @@
 package com.africahr.leave.repository;
 
-import com.africahr.leave.model.entity.Department;
 import com.africahr.leave.model.entity.LeaveRequest;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
+import com.africahr.leave.model.entity.Department;
 import com.africahr.leave.model.enums.LeaveRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

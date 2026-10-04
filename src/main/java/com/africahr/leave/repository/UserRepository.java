@@ -1,6 +1,6 @@
 package com.africahr.leave.repository;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,5 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmail(@Param("email") String email);
 
-    List<User> findByActiveTrue();
+    @Query("SELECT u FROM User u WHERE u.active = true")
+    List<User> findAllActiveUsers();
+
+    Optional<User> findByProviderId(String providerId);
 } 

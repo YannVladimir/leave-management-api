@@ -1,7 +1,7 @@
 package com.africahr.leave.service.impl;
 
 import com.africahr.leave.model.entity.Document;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.repository.DocumentRepository;
 import com.africahr.leave.service.DocumentService;
 import lombok.extern.slf4j.Slf4j;

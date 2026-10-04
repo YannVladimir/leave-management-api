@@ -1,6 +1,6 @@
 package com.africahr.leave.service;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import jakarta.mail.MessagingException;
 
 public interface EmailService {

@@ -1,7 +1,7 @@
 package com.africahr.leave.controller;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.entity.Document;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.service.DocumentService;
 import com.africahr.leave.service.UserService;
 import lombok.RequiredArgsConstructor;

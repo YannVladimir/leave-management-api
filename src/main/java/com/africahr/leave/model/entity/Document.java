@@ -1,5 +1,6 @@
 package com.africahr.leave.model.entity;
 
+import com.africahr.leave.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -24,32 +25,35 @@ public class Document {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(nullable = false)
+    @Column(name = "file_path", nullable = false)
     private String filePath;
 
-    @Column(nullable = false)
+    @Column(name = "content_type", nullable = false)
     private String contentType;
 
-    @Column(nullable = false)
-    private Long fileSize;
-
-    @Column(nullable = false)
+    @Column(name = "document_type", nullable = false)
     private String documentType;
 
-    @Column(length = 500)
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    @Column(name = "last_updated", nullable = false)
+    private LocalDateTime lastUpdated;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        lastUpdated = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdated = LocalDateTime.now();
+    }
 } 

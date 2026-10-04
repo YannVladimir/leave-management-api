@@ -1,7 +1,8 @@
 package com.africahr.leave.service.impl;
 
 import com.africahr.leave.event.UserCreatedEvent;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
+import com.africahr.leave.model.enums.UserRole;
 import com.africahr.leave.repository.UserRepository;
 import com.africahr.leave.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import java.util.Map;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -21,9 +28,18 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional
+    public Optional<User> findByMicrosoftId(String microsoftId) {
+        return userRepository.findByMicrosoftId(microsoftId);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
     public User save(User user) {
-        log.info("Attempting to save user to database - Email: {}, Microsoft ID: {}", user.getEmail(), user.getMicrosoftId());
+        log.info("Attempting to save user to database - Email: {}, Provider ID: {}", user.getEmail(), user.getProviderId());
         try {
             User savedUser = userRepository.save(user);
             log.info("Successfully saved user to database - ID: {}, Email: {}", savedUser.getId(), savedUser.getEmail());
@@ -39,44 +55,55 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<User> findByMicrosoftId(String microsoftId) {
-        log.info("Searching for user by Microsoft ID: {}", microsoftId);
-        Optional<User> user = userRepository.findByMicrosoftId(microsoftId);
-        if (user.isEmpty()) {
-            log.info("No user found with Microsoft ID: {}", microsoftId);
-        } else {
-            log.info("Found user by Microsoft ID - User ID: {}, Email: {}", 
-                    user.get().getId(), user.get().getEmail());
-        }
-        return user;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<User> findByEmail(String email) {
-        log.info("Searching for user by Email: {}", email);
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isEmpty()) {
-            log.info("No user found with Email: {}", email);
-        } else {
-            log.info("Found user by Email - User ID: {}, Email: {}", 
-                    user.get().getId(), user.get().getEmail());
-        }
-        return user;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<User> findAllActiveUsers() {
         log.info("Finding all active users");
-        return userRepository.findByActiveTrue();
+        return userRepository.findAllActiveUsers();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<User> findById(Long id) {
         log.info("Finding user by ID: {}", id);
         return userRepository.findById(id);
+    }
+
+    @Override
+    public User getOrCreateUserFromOAuth2User(OAuth2User oauth2User) {
+        Map<String, Object> attributes = oauth2User.getAttributes();
+        String email = (String) attributes.get("email");
+        String name = (String) attributes.get("name");
+        String providerId = (String) attributes.get("sub");
+        
+        log.info("Processing OAuth2 user - Email: {}, ProviderId: {}", email, providerId);
+
+        User user = userRepository.findByMicrosoftId(providerId)
+                .orElseGet(() -> userRepository.findByEmail(email)
+                        .orElseGet(() -> {
+                            log.info("Creating new user with email: {}", email);
+                            Set<UserRole> roles = new HashSet<>();
+                            roles.add(UserRole.USER);
+                            
+                            // Split name into first and last name
+                            String[] nameParts = name != null ? name.split(" ", 2) : new String[]{"", ""};
+                            String firstName = nameParts[0];
+                            String lastName = nameParts.length > 1 ? nameParts[1] : "";
+                            
+                            return userRepository.save(User.builder()
+                                    .email(email)
+                                    .name(name)
+                                    .firstName(firstName)
+                                    .lastName(lastName)
+                                    .fullName(name)
+                                    .microsoftId(providerId)
+                                    .active(true)
+                                    .roles(roles)
+                                    .createdAt(LocalDateTime.now())
+                                    .lastUpdated(LocalDateTime.now())
+                                    .provider("microsoft")
+                                    .providerId(providerId)
+                                    .build());
+                        }));
+
+        log.info("User processed successfully. ID: {}", user.getId());
+        return user;
     }
 } 

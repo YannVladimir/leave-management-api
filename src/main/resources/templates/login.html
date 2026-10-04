@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login - Leave Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .login-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-button {
+            display: inline-block;
+            background-color: #0078d4;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        .login-button:hover {
+            background-color: #106ebe;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="/images/logo.png" alt="Company Logo" class="logo" th:src="@{/images/logo.png}">
+        <h1>Welcome to Leave Management System</h1>
+        <p>Please sign in with your Microsoft account to continue</p>
+        <a href="/oauth2/authorization/microsoft" class="login-button">Sign in with Microsoft</a>
+    </div>
+</body>
+</html> 

@@ -2,6 +2,7 @@ package com.africahr.leave.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.africahr.leave.model.User;
 
 import java.time.LocalDateTime;
 

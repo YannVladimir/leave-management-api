@@ -1,7 +1,7 @@
 package com.africahr.leave.service;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.entity.Document;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.repository.DocumentRepository;
 import com.africahr.leave.service.impl.DocumentServiceImpl;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -55,11 +55,9 @@ class DocumentServiceTest {
             .fileName("test.pdf")
             .filePath("/uploads/test.pdf")
             .contentType("application/pdf")
-            .fileSize(1024L)
             .documentType("LEAVE_REQUEST")
             .description("Test Document")
             .user(user)
-            .active(true)
             .build();
 
         file = new MockMultipartFile(

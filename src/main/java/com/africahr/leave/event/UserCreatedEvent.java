@@ -1,6 +1,6 @@
 package com.africahr.leave.event;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

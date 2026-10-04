@@ -1,6 +1,6 @@
 package com.africahr.leave.security;
 
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,7 +1,7 @@
 package com.africahr.leave.service;
 
 import com.africahr.leave.model.entity.Document;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,22 +1,26 @@
 package com.africahr.leave.service.impl;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.entity.LeaveBalance;
 import com.africahr.leave.model.entity.LeaveRequest;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.model.enums.LeaveRequestStatus;
 import com.africahr.leave.model.enums.LeaveType;
+import com.africahr.leave.dto.LeaveBalanceDTO;
 import com.africahr.leave.repository.LeaveBalanceRepository;
 import com.africahr.leave.service.LeaveBalanceService;
 import com.africahr.leave.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,22 +33,24 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final UserService userService;
 
+    @Autowired
     public LeaveBalanceServiceImpl(LeaveBalanceRepository leaveBalanceRepository, UserService userService) {
         this.leaveBalanceRepository = leaveBalanceRepository;
         this.userService = userService;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LeaveBalance> getLeaveBalancesByUser(User user) {
         log.info("Fetching all leave balances for user: {}", user.getEmail());
         return leaveBalanceRepository.findByUser(user);
     }
 
     @Override
-    public LeaveBalance getLeaveBalanceByUserAndType(User user, LeaveType leaveType) {
+    @Transactional(readOnly = true)
+    public Optional<LeaveBalance> getLeaveBalanceByUserAndType(User user, LeaveType leaveType) {
         log.info("Fetching {} balance for user: {}", leaveType, user.getEmail());
-        return leaveBalanceRepository.findByUserAndLeaveType(user, leaveType)
-                .orElseGet(() -> createNewBalance(user, leaveType));
+        return leaveBalanceRepository.findByUserAndLeaveType(user, leaveType);
     }
 
     @Override
@@ -52,7 +58,8 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
         log.info("Processing monthly leave accrual for date: {}", accrualDate);
         List<User> activeUsers = userService.findAllActiveUsers();
         for (User user : activeUsers) {
-            LeaveBalance annualBalance = getLeaveBalanceByUserAndType(user, LeaveType.ANNUAL);
+            LeaveBalance annualBalance = getLeaveBalanceByUserAndType(user, LeaveType.ANNUAL)
+                    .orElseGet(() -> createNewBalance(user, LeaveType.ANNUAL));
             annualBalance.setBalance(annualBalance.getBalance() + MONTHLY_ACCRUAL);
             leaveBalanceRepository.save(annualBalance);
             log.info("Accrued {} days of annual leave for user: {}", MONTHLY_ACCRUAL, user.getEmail());
@@ -64,7 +71,8 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
         log.info("Processing year-end carry forward for year: {}", year);
         List<User> activeUsers = userService.findAllActiveUsers();
         for (User user : activeUsers) {
-            LeaveBalance annualBalance = getLeaveBalanceByUserAndType(user, LeaveType.ANNUAL);
+            LeaveBalance annualBalance = getLeaveBalanceByUserAndType(user, LeaveType.ANNUAL)
+                    .orElseGet(() -> createNewBalance(user, LeaveType.ANNUAL));
             double currentBalance = annualBalance.getBalance();
             double carryForward = Math.min(currentBalance, MAX_CARRY_FORWARD);
             
@@ -95,7 +103,8 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     public LeaveBalance adjustLeaveBalance(User user, LeaveType leaveType, double adjustment, String reason) {
         log.info("Adjusting {} balance by {} for user: {} with reason: {}", 
                 leaveType, adjustment, user.getEmail(), reason);
-        LeaveBalance balance = getLeaveBalanceByUserAndType(user, leaveType);
+        LeaveBalance balance = getLeaveBalanceByUserAndType(user, leaveType)
+                .orElseThrow(() -> new EntityNotFoundException("Leave balance not found for user: " + user.getEmail() + ", leave type: " + leaveType));
         balance.setBalance(balance.getBalance() + adjustment);
         return leaveBalanceRepository.save(balance);
     }
@@ -106,7 +115,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
         log.info("Fetching {} balance history for user: {} between {} and {}", 
                 leaveType, user.getEmail(), startDate, endDate);
         return leaveBalanceRepository.findByUserAndLeaveTypeAndLastUpdatedBetween(
-                user, leaveType, startDate, endDate);
+                user, leaveType, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
     }
 
     private LeaveBalance createNewBalance(User user, LeaveType leaveType) {
@@ -116,28 +125,32 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
         balance.setLeaveType(leaveType);
         balance.setBalance(0.0);
         balance.setYear(LocalDate.now().getYear());
+        balance.setCreatedAt(LocalDateTime.now());
+        balance.setLastUpdated(LocalDateTime.now());
         return leaveBalanceRepository.save(balance);
     }
 
     @Override
     @Transactional
-    public LeaveBalance createLeaveBalance(LeaveBalance leaveBalance) {
-        leaveBalance.setLastUpdated(LocalDate.now());
+    public LeaveBalance createLeaveBalance(User user, LeaveType leaveType, int year) {
+        LeaveBalance leaveBalance = new LeaveBalance();
+        leaveBalance.setUser(user);
+        leaveBalance.setLeaveType(leaveType);
+        leaveBalance.setYear(year);
+        leaveBalance.setBalance(0.0);
+        leaveBalance.setTotalAccrued(0.0);
+        leaveBalance.setUsedDays(0.0);
+        leaveBalance.setCarriedForward(0.0);
+        leaveBalance.setCreatedAt(LocalDateTime.now());
+        leaveBalance.setLastUpdated(LocalDateTime.now());
         return leaveBalanceRepository.save(leaveBalance);
     }
 
     @Override
     @Transactional
-    public LeaveBalance updateLeaveBalance(Long id, LeaveBalance leaveBalance) {
-        LeaveBalance existingBalance = leaveBalanceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Leave balance not found with id: " + id));
-
-        existingBalance.setTotalAccrued(leaveBalance.getTotalAccrued());
-        existingBalance.setUsedDays(leaveBalance.getUsedDays());
-        existingBalance.setCarriedForward(leaveBalance.getCarriedForward());
-        existingBalance.setLastUpdated(LocalDate.now());
-
-        return leaveBalanceRepository.save(existingBalance);
+    public LeaveBalance updateLeaveBalance(LeaveBalance leaveBalance) {
+        leaveBalance.setLastUpdated(LocalDateTime.now());
+        return leaveBalanceRepository.save(leaveBalance);
     }
 
     @Override
@@ -187,7 +200,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
         double daysToDeduct = calculateDaysToDeduct(leaveRequest);
         balance.setUsedDays(balance.getUsedDays() + daysToDeduct);
-        balance.setLastUpdated(LocalDate.now());
+        balance.setLastUpdated(LocalDateTime.now());
 
         leaveBalanceRepository.save(balance);
     }
@@ -218,7 +231,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
             }
         }
 
-        balance.setLastUpdated(LocalDate.now());
+        balance.setLastUpdated(LocalDateTime.now());
         leaveBalanceRepository.save(balance);
     }
 
@@ -286,7 +299,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
             );
             double daysToAdd = calculateDaysToDeduct(leaveRequest);
             balance.setUsedDays(balance.getUsedDays() - daysToAdd);
-            balance.setLastUpdated(LocalDate.now());
+            balance.setLastUpdated(LocalDateTime.now());
             leaveBalanceRepository.save(balance);
         }
     }
@@ -304,6 +317,37 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     public LeaveBalance getLeaveBalanceByUserIdAndType(Long userId, LeaveType leaveType) {
         User user = userService.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-        return getLeaveBalanceByUserAndType(user, leaveType);
+        return getLeaveBalanceByUserAndType(user, leaveType)
+                .orElseThrow(() -> new EntityNotFoundException("Leave balance not found for user: " + user.getEmail() + ", leave type: " + leaveType));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LeaveBalanceDTO getLeaveBalanceDTO(User user, LeaveType leaveType, int year) {
+        Optional<LeaveBalance> leaveBalance = leaveBalanceRepository.findByUserAndLeaveTypeAndYear(user, leaveType, year);
+        return leaveBalance.map(this::convertToDTO).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LeaveBalanceDTO> getLeaveBalanceDTOs(User user, int year) {
+        List<LeaveBalance> leaveBalances = leaveBalanceRepository.findByUserAndYear(user, year);
+        return leaveBalances.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private LeaveBalanceDTO convertToDTO(LeaveBalance leaveBalance) {
+        LeaveBalanceDTO dto = new LeaveBalanceDTO();
+        dto.setId(leaveBalance.getId());
+        dto.setUserId(leaveBalance.getUser().getId());
+        dto.setUserFullName(leaveBalance.getUser().getFullName());
+        dto.setLeaveType(leaveBalance.getLeaveType());
+        dto.setYear(leaveBalance.getYear());
+        dto.setBalance(leaveBalance.getBalance());
+        dto.setTotalAccrued(leaveBalance.getTotalAccrued());
+        dto.setUsedDays(leaveBalance.getUsedDays());
+        dto.setCarriedForward(leaveBalance.getCarriedForward());
+        return dto;
     }
 } 

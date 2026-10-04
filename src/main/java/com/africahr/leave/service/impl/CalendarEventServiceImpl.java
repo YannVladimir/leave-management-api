@@ -2,7 +2,7 @@ package com.africahr.leave.service.impl;
 
 import com.africahr.leave.model.entity.CalendarEvent;
 import com.africahr.leave.model.entity.LeaveRequest;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 import com.africahr.leave.repository.CalendarEventRepository;
 import com.africahr.leave.repository.LeaveRequestRepository;
 import com.africahr.leave.service.CalendarEventService;

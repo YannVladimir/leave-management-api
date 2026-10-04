@@ -1,7 +1,7 @@
 package com.africahr.leave.service;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.entity.Department;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.model.enums.LeaveType;
 
 import java.time.LocalDate;

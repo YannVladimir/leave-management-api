@@ -1,12 +1,13 @@
 package com.africahr.leave.model.entity;
 
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.enums.LeaveType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -24,29 +25,38 @@ public class LeaveBalance {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "leave_type", nullable = false)
     private LeaveType leaveType;
 
-    @Column(nullable = false)
-    private Double balance;
+    @Column(name = "year", nullable = false)
+    private int year;
 
-    @Column(nullable = false)
-    private Double totalAccrued;
+    @Column(name = "balance", nullable = false)
+    private double balance;
 
-    @Column(nullable = false)
-    private Double usedDays;
+    @Column(name = "total_accrued", nullable = false)
+    private double totalAccrued;
 
-    @Column(nullable = false)
-    private Double carriedForward;
+    @Column(name = "used_days", nullable = false)
+    private double usedDays;
 
-    @Column(nullable = false)
-    private Integer year;
+    @Column(name = "carried_forward", nullable = false)
+    private double carriedForward;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDate createdAt;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDate lastUpdated;
+    @Column(name = "last_updated", nullable = false)
+    private LocalDateTime lastUpdated;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        lastUpdated = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdated = LocalDateTime.now();
+    }
 } 

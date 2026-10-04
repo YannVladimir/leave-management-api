@@ -1,7 +1,7 @@
 package com.africahr.leave.service;
 
 import com.africahr.leave.model.entity.CalendarEvent;
-import com.africahr.leave.model.entity.User;
+import com.africahr.leave.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;

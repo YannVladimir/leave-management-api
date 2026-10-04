@@ -1,12 +1,12 @@
 package com.africahr.leave.controller;
 
-import com.africahr.leave.dto.LeaveBalanceDTO;
+import com.africahr.leave.model.User;
 import com.africahr.leave.model.entity.LeaveBalance;
-import com.africahr.leave.model.entity.User;
 import com.africahr.leave.model.enums.LeaveType;
+import com.africahr.leave.dto.LeaveBalanceDTO;
 import com.africahr.leave.service.LeaveBalanceService;
 import com.africahr.leave.service.UserService;
-import jakarta.validation.Valid;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -66,7 +66,8 @@ public class LeaveBalanceController {
         User user = userService.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         
-        LeaveBalance balance = leaveBalanceService.getLeaveBalanceByUserAndType(user, leaveType);
+        LeaveBalance balance = leaveBalanceService.getLeaveBalanceByUserAndType(user, leaveType)
+                .orElseThrow(() -> new EntityNotFoundException("Leave balance not found"));
         return ResponseEntity.ok(LeaveBalanceDTO.fromEntity(balance));
     }
 
