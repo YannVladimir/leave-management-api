@@ -61,20 +61,26 @@ public class SecurityConfig {
                     // Public endpoints
                     .requestMatchers("/", "/login", "/oauth2/**", "/error").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
-                    
-                    // User endpoints
-                    .requestMatchers("/api/leave/apply", "/api/leave/my-requests", 
-                                   "/api/leave/balance", "/api/documents/upload").hasRole("USER")
-                    
-                    // Manager endpoints
-                    .requestMatchers("/api/leave/approve", "/api/leave/reject", 
-                                   "/api/leave/team-requests", "/api/calendar/team").hasRole("MANAGER")
-                    
-                    // Admin endpoints
-                    .requestMatchers("/api/admin/**", "/api/users/**", 
-                                   "/api/leave/types", "/api/reports/**").hasRole("ADMIN")
-                    
-                    // All authenticated users
+                    .requestMatchers("/api/users/current").permitAll()
+                    .requestMatchers("/api/holidays/public", "/api/holidays/between").permitAll()
+
+                    // Role-specific rules beyond this point are enforced with @PreAuthorize on
+                    // the controller methods themselves (see HolidayController, UserRoleController,
+                    // LeaveReportController, LeaveRequestController, LeaveBalanceController).
+                    // NOTE: a previous version of this config tried to restrict roles here using
+                    // path patterns like "/api/leave/approve" and "/api/admin/**", but none of
+                    // those paths match any real controller mapping (the actual routes are under
+                    // "/api/leave-requests/**" and "/api/leave/balance/**"), and broad catch-alls
+                    // like "/api/users/**" => ADMIN and "/api/reports/**" => ADMIN silently blocked
+                    // MANAGER users and regular users from endpoints they were supposed to reach,
+                    // while the real sensitive endpoints (approve/reject/adjust-balance/etc.) had
+                    // no filter-chain restriction at all and fell through to "authenticated()" -
+                    // i.e. any logged-in user, regardless of role. That is fixed at the method
+                    // level now; keep this list in sync if new admin/manager-only routes are added
+                    // without their own @PreAuthorize.
+
+                    // All other endpoints just require a logged-in user; fine-grained role checks
+                    // happen via @PreAuthorize.
                     .anyRequest().authenticated();
             })
             .oauth2Login(oauth2 -> oauth2

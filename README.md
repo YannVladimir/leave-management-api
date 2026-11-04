@@ -28,7 +28,16 @@ Copy the example config and fill in your own values:
 cp src/main/resources/application.properties.example src/main/resources/application.properties
 ```
 
-Then set your database credentials and Microsoft OAuth2 client ID/secret/tenant ID in that file. It's git-ignored, so your secrets stay local.
+Then set your database credentials, a JWT signing secret (`app.jwt.secret`, generate one with
+`openssl rand -base64 32`), and your Microsoft OAuth2 client ID/secret/tenant ID in that file.
+It's git-ignored, so your secrets stay local.
+
+> **Security note:** earlier versions of this repo had a hardcoded JWT signing secret baked
+> directly into `JwtService.java` and committed to git history. It has been moved to the
+> `app.jwt.secret` config property (no default - the app now fails fast at startup if it isn't
+> set), but the old hardcoded value is still visible in this repo's git history. If this project
+> is ever deployed with that old key, rotate it immediately - anyone who has seen the history
+> can forge valid JWTs with it.
 
 ### Run
 
@@ -52,6 +61,28 @@ http://localhost:8083/swagger-ui.html
 ./mvnw test
 ```
 
+All tests are plain JUnit 5 + Mockito unit tests (no database or OAuth2 provider required to run
+them). CI (`.github/workflows/ci.yml`) runs `mvn test` on every push/PR against `main`.
+
+## Authorization model
+
+Roles are `USER`, `MANAGER`, and `ADMIN` (see `UserRole`). Access control is enforced with
+`@PreAuthorize` on controller methods (method security is enabled via `@EnableMethodSecurity` in
+`SecurityConfig`), with a path-based `authenticated()` catch-all in the security filter chain for
+everything else. A few examples:
+
+- Approving/rejecting a leave request or viewing a team's requests requires `MANAGER` -
+  `LeaveRequestController`. The service layer additionally checks that the caller is the actual
+  manager of the employee who filed the request.
+- Viewing or adjusting another user's leave balance, triggering monthly accrual, or year-end
+  carry-forward requires `ADMIN`/`MANAGER` - `LeaveBalanceController`.
+- Holiday management and user role management require `ADMIN`.
+
+(An earlier version of `SecurityConfig` restricted roles using path patterns like
+`/api/leave/approve` and `/api/admin/**` that didn't match any real controller route - meaning
+those sensitive endpoints had no role restriction at all and were reachable by any authenticated
+user. That's been fixed; see the commit history for details.)
+
 ## Project Structure
 
 ```
@@ -64,3 +95,14 @@ src/main/java/com/africahr/leave/
 ├── security/     # OAuth2 / JWT auth components
 └── service/      # Business logic
 ```
+
+## Known limitations
+
+- `POST /api/leave/balance/adjust` adjusts the *authenticated caller's own* balance rather than
+  taking a target user id. It's restricted to `ADMIN` to prevent self-service balance inflation,
+  but as a result only an admin adjusting their own balance can use it as-is. A proper "HR
+  corrects an employee's balance" flow would need this endpoint reworked to accept a target user.
+
+## License
+
+MIT - see [LICENSE](LICENSE).

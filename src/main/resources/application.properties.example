@@ -1,3 +1,8 @@
+# JWT Configuration
+# Generate a value with: openssl rand -base64 32
+# This MUST be kept secret and MUST be different per environment. Never commit a real value.
+app.jwt.secret=replace_with_a_base64_secret_at_least_32_bytes_long
+
 # Database Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/leave
 spring.datasource.username=postgres

@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -115,6 +116,7 @@ public class LeaveRequestController {
     }
 
     @GetMapping("/team")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<LeaveRequestDTO>> getTeamLeaveRequests(
             @AuthenticationPrincipal OAuth2User principal) {
         String userEmail = principal.getAttribute("email");
@@ -131,6 +133,7 @@ public class LeaveRequestController {
     }
 
     @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<LeaveRequestDTO> approveLeaveRequest(
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable Long id,
@@ -145,6 +148,7 @@ public class LeaveRequestController {
     }
 
     @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<LeaveRequestDTO> rejectLeaveRequest(
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable Long id,
@@ -184,6 +188,7 @@ public class LeaveRequestController {
     }
 
     @GetMapping("/date-range")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<LeaveRequest>> getLeaveRequestsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {

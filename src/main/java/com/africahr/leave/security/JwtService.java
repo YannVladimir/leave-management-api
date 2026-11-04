@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,20 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
     private static final long JWT_EXPIRATION = 86400000; // 24 hours
+
+    private final Key signInKey;
+
+    /**
+     * The signing key is read from configuration (app.jwt.secret) instead of being
+     * hardcoded, since a hardcoded signing secret committed to source control lets
+     * anyone who has ever seen this repository forge valid JWTs for any user/role.
+     * Generate a value with: openssl rand -base64 32
+     */
+    public JwtService(@Value("${app.jwt.secret}") String secretKey) {
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(secretKey);
+        this.signInKey = Keys.hmacShaKeyFor(keyBytes);
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -72,7 +85,6 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = java.util.Base64.getDecoder().decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signInKey;
     }
 } 
