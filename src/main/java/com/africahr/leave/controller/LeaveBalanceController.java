@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +47,7 @@ public class LeaveBalanceController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<LeaveBalanceDTO>> getUserLeaveBalances(
             @PathVariable Long userId) {
         log.info("Fetching leave balances for user ID: {}", userId);
@@ -72,6 +74,7 @@ public class LeaveBalanceController {
     }
 
     @GetMapping("/user/{userId}/{leaveType}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<LeaveBalanceDTO> getUserLeaveBalanceByType(
             @PathVariable Long userId,
             @PathVariable LeaveType leaveType) {
@@ -81,6 +84,7 @@ public class LeaveBalanceController {
     }
 
     @PostMapping("/accrue")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> accrueMonthlyLeave(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate accrualDate) {
         log.info("Processing monthly leave accrual for date: {}", accrualDate);
@@ -89,6 +93,7 @@ public class LeaveBalanceController {
     }
 
     @PostMapping("/carry-forward")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> processYearEndCarryForward(
             @RequestParam int year) {
         log.info("Processing year-end carry forward for year: {}", year);
@@ -107,7 +112,14 @@ public class LeaveBalanceController {
         return ResponseEntity.ok(leaveBalanceService.getLeaveBalanceSummary(user));
     }
 
+    // NOTE: this currently adjusts the CALLER's own balance (it reads the target user from the
+    // authenticated principal, not from a request parameter). Restricting it to ADMIN closes the
+    // immediate hole (any logged-in user could previously grant themselves arbitrary extra leave
+    // days), but a proper "HR corrects someone else's balance" flow would need this endpoint to
+    // accept a target userId instead. Left as-is to avoid changing the API contract the frontend
+    // depends on; flagging here for follow-up.
     @PostMapping("/adjust")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LeaveBalanceDTO> adjustLeaveBalance(
             @AuthenticationPrincipal OAuth2User principal,
             @RequestParam LeaveType leaveType,

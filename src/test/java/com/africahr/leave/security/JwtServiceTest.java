@@ -15,12 +15,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
 
+    // Test-only signing key (not used anywhere outside this test). A real deployment
+    // must set its own value via the app.jwt.secret property / APP_JWT_SECRET env var.
+    private static final String TEST_SECRET_KEY =
+            "dGVzdC1vbmx5LXNpZ25pbmcta2V5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbiE=";
+
     private JwtService jwtService;
     private UserDetails userDetails;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
+        jwtService = new JwtService(TEST_SECRET_KEY);
         
         userDetails = User.builder()
                 .username("test@example.com")

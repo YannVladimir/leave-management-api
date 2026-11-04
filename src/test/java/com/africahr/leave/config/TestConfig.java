@@ -20,9 +20,14 @@ import java.util.Map;
 @EnableMethodSecurity
 public class TestConfig {
 
+    // Any non-empty base64 string works here: this bean overrides every JwtService method
+    // below, so the key itself is never actually used to sign or verify anything.
+    private static final String DUMMY_TEST_SECRET =
+            "dGVzdC1vbmx5LXNpZ25pbmcta2V5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbiE=";
+
     @Bean
     public JwtService jwtService() {
-        return new JwtService() {
+        return new JwtService(DUMMY_TEST_SECRET) {
             @Override
             public String extractUsername(String token) {
                 return null;
